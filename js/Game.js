@@ -6,7 +6,7 @@ class Game {
   constructor(missed, phrases, activePhrase) {
     this.missed = 0;
     this.phrases = this.createPhrases();
-    this.activePhrase = this.getRandomPhrase();
+    this.activePhrase = null;
   }
   /**
    * Creates phrases for use in game
@@ -18,6 +18,10 @@ class Game {
       { phrase: "Never look back" },
       { phrase: "Life is short" },
       { phrase: "Keep it simple" },
+      { phrase: "You talking to me" },
+      { phrase: "For the Horde" },
+      { phrase: "Chicken noodle soup" },
+      { phrase: "You Only Live Once" },
       { phrase: "Time is money" }
     ];
   }
@@ -36,9 +40,8 @@ class Game {
     //hide the start screen overlay
     document.querySelector("#overlay").setAttribute("style", "display: none");
     // retrieve a random phrase object from the array
-    const getPhrase = this.getRandomPhrase();
-    //! set new Phrase with getPhrase.phrase - this ".phrase" targets "phrase" key inside a "creatPhrase()'s object" (=returns a string)
-    const newPhrase = new Phrase(getPhrase.phrase);
+    this.activePhrase = this.getRandomPhrase();
+    const newPhrase = new Phrase(this.activePhrase.phrase);
     // add the phrase to display
     newPhrase.addPhraseToDisplay();
   }
@@ -47,8 +50,9 @@ class Game {
    * @return {boolean} True if game has been won, false if game wasn't won
    */
   checkForWin() {
-    const matchedLetters = document.querySelectorAll("show");
-    if (matchedLetters.length === 0) {
+    const hiddenLetters = document.querySelectorAll(".hide");
+    if (hiddenLetters.length === 0) {
+      // if there's no word hidden === win
       return true;
     } else {
       return false;
@@ -61,10 +65,14 @@ class Game {
    */
   removeLife() {
     this.missed += 1;
-    const hearts = document.querySelectorAll(".tries");
-    hearts[0].firstElementChild.setAttribute("src", "images/lostHeart.png");
-    if ((this.missed = 5)) {
-      this.gameOver();
+    const liveHeart = document.querySelectorAll(
+      ".tries img[src='images/liveHeart.png']"
+    );
+    // replace next "first" heart item to lostHeart.png
+    const heartsLi = liveHeart[0].parentNode;
+    heartsLi.firstElementChild.setAttribute("src", "images/lostHeart.png");
+    if (this.missed === 5) {
+      this.gameOver(false);
     }
   }
   /**
@@ -74,14 +82,67 @@ class Game {
   gameOver(gameWon) {
     const gameEndMessage = document.querySelector("#game-over-message");
     const overlay = document.querySelector("#overlay");
-    if ((this.missed = 5)) {
-      gameEndMessage.innerHTML = "You lose!";
-      overlay.classList.remove("start");
-      overlay.classList.add("lose");
+    const button = document.querySelector("#btn__reset");
+    if (gameWon) {
+      overlay.setAttribute("style", 'display: ""');
+      gameEndMessage.innerHTML = "You are good! I'm impressed.";
+      overlay.className = "win";
+      button.innerText = "Play Again?";
+      reset();
     } else {
-      gameEndMessage.innerHTML = "You Win!";
-      overlay.classList.remove("start");
-      overlay.classList.add("win");
+      overlay.setAttribute("style", 'display: ""');
+      gameEndMessage.innerHTML = "You better learn more English!";
+      overlay.className = "lose";
+      button.innerText = "Try Again";
+      reset();
+    }
+  }
+  /**
+   * Handles onscreen keyboard button clicks
+   * @param (HTMLButtonElement) button - The clicked button element
+   */
+  handleInteraction(button) {
+    button.setAttribute("disabled", "true");
+    const buttonString = button.innerText;
+    const currentPhrase = new Phrase(this.activePhrase.phrase);
+    const isMatch = currentPhrase.checkLetter(buttonString);
+    if (isMatch) {
+      button.classList.add("chosen");
+      currentPhrase.showMatchedLetter(buttonString);
+      const isWin = this.checkForWin();
+      if (isWin) {
+        this.gameOver(true);
+      }
+    } else {
+      //! EXCEED EXPECTATION CONTENT
+      button.classList.add("wrong", "animated", "shake");
+      this.removeLife();
     }
   }
 }
+
+//! RESET GAME
+const reset = () => {
+  const phraseUl = document.querySelector("#phrase ul");
+  const buttons = document.querySelectorAll(".key");
+  const lostHeart = document.querySelectorAll(
+    ".tries img[src='images/lostHeart.png']"
+  );
+  // remove all 'li' elements
+  phraseUl.innerHTML = "";
+
+  for (let i = 0; i < buttons.length; i++) {
+    const button = buttons[i];
+    // reset the class name to "key" only
+    button.className = "key";
+    button.removeAttribute("disabled");
+  }
+
+  for (let i = 0; i < lostHeart.length; i++) {
+    // return the liveHearts
+    lostHeart[i].setAttribute("src", "images/liveHeart.png");
+  }
+  // set missed to 0
+  game.missed = 0;
+  // start a new game
+};

@@ -2,6 +2,9 @@
  * Project 4 - OOP Game App
  * Game.js */
 
+const phraseDiv = document.querySelector("#phrase ul");
+const buttons = document.querySelectorAll(".key");
+
 class Phrase {
   constructor(phrase) {
     this.phrase = phrase.toLowerCase();
@@ -19,18 +22,21 @@ class Phrase {
       }
     });
     // it returns an array with HTML elements
-    const phraseDiv = document.querySelector("#phrase ul");
+
     // used "join" method to put all elements together (referred to MDN through Google)
     phraseDiv.innerHTML = deployLetters.join("");
   }
-
   // check if the letter selected matches a letter
   /**
    * Checks if passed letter is in phrase
    * @param (string) letter - Letter to check
    */
   checkLetter(letter) {
-    this.phrase.includes(letter);
+    if (this.phrase.includes(letter)) {
+      return true;
+    } else {
+      return false;
+    }
   }
   /**
    * Displays passed letter on screen after a match is found
@@ -38,7 +44,11 @@ class Phrase {
    */
   showMatchedLetter(letter) {
     const matchingLetters = document.getElementsByClassName(letter);
-    matchingLetters.classList.remove("hide");
-    matchingLetters.classList.add("show");
+    for (let i = 0; i < matchingLetters.length; i++) {
+      const letter = matchingLetters[i];
+      letter.classList.remove("hide");
+      //! EXCEED EXPECTATION CONTENT
+      letter.classList.add("show", "animated", "bounce");
+    }
   }
 }
